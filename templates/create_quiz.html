@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% set eh_edicao = page_mode == "edit" %}
+{% block title %}{% if eh_edicao %}Editar Quiz{% else %}Novo Quiz{% endif %}{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>{% if eh_edicao %}Editar quiz{% else %}Criar quiz{% endif %}</h2>
+    <p class="muted">
+        {% if eh_edicao %}
+        Atualize perguntas, alternativas e resposta correta.
+        {% else %}
+        Adicione perguntas com até 4 alternativas e marque a correta.
+        {% endif %}
+    </p>
+
+    {% if erro %}
+    <div class="error">{{ erro }}</div>
+    {% endif %}
+
+    <form id="quiz-form" method="POST" class="grid">
+        <div class="field">
+            <label for="titulo">Título do quiz</label>
+            <input id="titulo" type="text" name="titulo" value="{{ titulo_inicial }}" placeholder="Ex: Revisão de Matemática" required>
+        </div>
+
+        <input type="hidden" name="payload" id="payload">
+
+        <div id="perguntas" class="grid"></div>
+
+        <div class="actions">
+            <button type="button" class="btn btn-outline" id="add-pergunta">+ Adicionar pergunta</button>
+            <button type="submit" class="btn">{% if eh_edicao %}Salvar alterações{% else %}Salvar e gerar link{% endif %}</button>
+            {% if eh_edicao and quiz %}
+            <a class="btn btn-outline" href="{{ url_for('detalhes_quiz', slug=quiz.slug) }}">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+    const perguntasContainer = document.getElementById("perguntas");
+    const form = document.getElementById("quiz-form");
+    const payloadInput = document.getElementById("payload");
+    const addPerguntaBtn = document.getElementById("add-pergunta");
+    const perguntasIniciais = {{ (perguntas_iniciais or [])|tojson }};
+
+    let perguntaIndex = 0;
+
+    function criarLinhaOpcao(qid, indiceOpcao) {
+        return `
+            <label class="option-row">
+                <input
+                    type="text"
+                    class="option-text"
+                    data-index="${indiceOpcao}"
+                    placeholder="Alternativa ${indiceOpcao + 1}"
+                >
+                <span>
+                    <input
+                        type="radio"
+                        name="correta-${qid}"
+                        value="${indiceOpcao}"
+                        ${indiceOpcao === 0 ? "checked" : ""}
+                    > correta
+                </span>
+            </label>
+        `;
+    }
+
+    function criarPergunta(dadosPergunta = null) {
+        const qid = perguntaIndex++;
+        const card = document.createElement("div");
+        card.className = "question-card";
+        card.dataset.qid = qid;
+
+        card.innerHTML = `
+            <div class="question-top">
+                <strong>Pergunta</strong>
+                <button type="button" class="btn btn-outline remover-pergunta">Remover</button>
+            </div>
+            <textarea class="question-text" rows="2" placeholder="Digite a pergunta" required></textarea>
+            <div class="grid">
+                ${criarLinhaOpcao(qid, 0)}
+                ${criarLinhaOpcao(qid, 1)}
+                ${criarLinhaOpcao(qid, 2)}
+                ${criarLinhaOpcao(qid, 3)}
+            </div>
+        `;
+
+        card.querySelector(".remover-pergunta").addEventListener("click", () => {
+            card.remove();
+        });
+
+        if (dadosPergunta && typeof dadosPergunta === "object") {
+            const texto = String(dadosPergunta.texto || "");
+            const alternativas = Array.isArray(dadosPergunta.alternativas) ? dadosPergunta.alternativas : [];
+            const correta = Number.isInteger(dadosPergunta.correta) ? dadosPergunta.correta : 0;
+
+            card.querySelector(".question-text").value = texto;
+
+            const inputsAlternativa = card.querySelectorAll(".option-text");
+            for (let i = 0; i < inputsAlternativa.length; i++) {
+                inputsAlternativa[i].value = alternativas[i] || "";
+            }
+
+            const radios = card.querySelectorAll("input[type='radio']");
+            radios.forEach((radio) => { radio.checked = false; });
+            if (radios[correta]) {
+                radios[correta].checked = true;
+            } else if (radios[0]) {
+                radios[0].checked = true;
+            }
+        }
+
+        perguntasContainer.appendChild(card);
+        card.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+});
+    }
+
+    addPerguntaBtn.addEventListener("click", () => criarPergunta());
+
+    form.addEventListener("submit", (event) => {
+        const perguntas = [];
+        const cards = Array.from(document.querySelectorAll(".question-card"));
+
+        if (cards.length === 0) {
+            event.preventDefault();
+            alert("Adicione pelo menos 1 pergunta.");
+            return;
+        }
+
+        for (const card of cards) {
+            const texto = card.querySelector(".question-text").value.trim();
+            const opcoes = Array.from(card.querySelectorAll(".option-text")).map((el) => el.value.trim());
+            const correta = card.querySelector("input[type='radio']:checked");
+            const opcoesValidas = [];
+            let indiceCorretaNormalizado = -1;
+
+            if (!texto || !correta) {
+                event.preventDefault();
+                alert("Preencha todas as perguntas com no mínimo 2 alternativas e marque a correta.");
+                return;
+            }
+
+            const indiceCorreta = Number(correta.value);
+            for (let i = 0; i < opcoes.length; i++) {
+                if (!opcoes[i]) {
+                    continue;
+                }
+
+                opcoesValidas.push(opcoes[i]);
+                if (i === indiceCorreta) {
+                    indiceCorretaNormalizado = opcoesValidas.length - 1;
+                }
+            }
+
+            if (opcoesValidas.length < 2) {
+                event.preventDefault();
+                alert("Cada pergunta precisa de no mínimo 2 alternativas.");
+                return;
+            }
+
+            if (indiceCorretaNormalizado < 0) {
+                event.preventDefault();
+                alert("A alternativa correta precisa estar preenchida.");
+                return;
+            }
+
+            perguntas.push({
+                texto,
+                alternativas: opcoesValidas,
+                correta: indiceCorretaNormalizado
+            });
+        }
+
+        payloadInput.value = JSON.stringify(perguntas);
+    });
+
+    if (perguntasIniciais.length > 0) {
+        perguntasIniciais.forEach((item) => criarPergunta(item));
+    } else {
+        criarPergunta();
+    }
+</script>
+{% endblock %}

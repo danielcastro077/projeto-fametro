@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Painel{% endblock %}
+{% block content %}
+<div class="card hero-card">
+    <div class="hero-copy">
+        
+        <h1>Olá, {{ seusuario_nome }}.</h1>
+        <p class="muted">{{ usuario_email }}</p>
+        
+        <div class="hero-actions">
+            <a class="btn" href="{{ url_for('criar_quiz') }}">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span class="btn-label">Criar novo quiz</span>
+            </a>
+            <a class="btn btn-outline" href="{{ url_for('home') }}">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span class="btn-label">Atualizar painel</span>
+            </a>
+        </div>
+    </div>
+
+
+</div>
+
+<div class="card">
+    <h2>Seus quizzes</h2>
+
+    {% if quizzes %}
+    <div class="stack">
+        {% for quiz in quizzes %}
+        <div class="quiz-item">
+            <div>
+                <h3 style="margin-bottom: 4px;">{{ quiz.titulo }}</h3>
+                <div class="quiz-meta">
+                    <span>{{ quiz.perguntas|length }} pergunta(s)</span>
+                    <span>Link: /quiz/{{ quiz.slug }}</span>
+                </div>
+            </div>
+            <div class="actions compact-actions">
+                <a class="btn btn-outline" href="{{ url_for('detalhes_quiz', slug=quiz.slug) }}">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span class="btn-label">Gerenciar</span>
+                </a>
+                <a class="btn btn-outline" href="{{ url_for('editar_quiz', slug=quiz.slug) }}">
+                    <i class="fa-solid fa-pen"></i>
+                    <span class="btn-label">Editar</span>
+                </a>
+                <a class="btn btn-outline" href="{{ url_for('responder_quiz', slug=quiz.slug) }}" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span class="btn-label">Abrir link</span>
+                </a>
+                <a class="btn btn-outline" href="{{ url_for('ranking_quiz', slug=quiz.slug) }}" target="_blank">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span class="btn-label">Ranking</span>
+                </a>
+                <form class="inline-form" method="POST" action="{{ url_for('deletar_quiz', slug=quiz.slug) }}" onsubmit="return confirm('Excluir este quiz e todas as respostas?');">
+                    <button class="btn btn-danger" type="submit">
+                        <i class="fa-solid fa-trash"></i>
+                        <span class="btn-label">Deletar</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">Você ainda não criou nenhum quiz.</p>
+    {% endif %}
+</div>
+{% endblock %}

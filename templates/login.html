@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="card center auth-card">
+    <section class="auth-panel">
+        <div class="auth-panel-inner">
+            <div class="auth-brand">
+                <div class="auth-logo-wrap">
+                    <img src="{{ url_for('static', filename='img/icone.png') }}" alt="Logo Quiz Master">
+                </div>
+                <span>Quiz Master</span>
+            </div>
+            <span class="auth-panel-tag">Acesso</span>
+            <h2 class="auth-headline">Acesse o Quiz</h2>
+            <p class="muted auth-subtitle">Use seu e-mail e senha para entrar no painel.</p>
+
+            {% if erro %}
+            <div class="error">{{ erro }}</div>
+            {% endif %}
+
+            <form method="POST" class="grid auth-form">
+                <div class="field">
+                    <label>E-mail</label>
+                    <input type="email" name="email" placeholder="seu@email.com" required>
+                </div>
+                <div style="position: relative;">
+    <input type="password" id="senha" name="senha" placeholder="Sua senha" required style="width: 100%; padding-right: 35px;">
+    
+    <span onclick="toggleSenha()" 
+      onmouseover="this.style.opacity='1'" 
+      onmouseout="this.style.opacity='0.5'"
+      style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+             cursor: pointer; opacity: 0.5; transition: 0.3s;">
+    
+    <i id="iconSenha" class="fa-solid fa-eye"></i>
+</span>
+</div>
+                <button type="submit" class="btn">Entrar</button>
+            </form>
+
+            <p class="muted auth-footer">
+                Não tem conta?
+                <a href="{{ url_for('register') }}">Criar conta</a>
+            </p>
+        </div>
+    </section>
+</div>
+<script>
+function toggleSenha() {
+    const input = document.getElementById("senha");
+    const icon = document.getElementById("iconSenha");
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+}
+</script>
+{% endblock %}

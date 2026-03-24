@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Responder Quiz{% endblock %}
+{% block content %}
+<div class="student-shell">
+    <div class="card student-hero">
+        <div class="student-copy">
+            <span class="student-badge">
+                <i class="fa-solid fa-user-graduate"></i>
+                Área do aluno
+            </span>
+            <h2>{{ quiz.titulo }}</h2>
+            <p class="muted">Digite seu nome, responda com calma e envie tudo no final.</p>
+        </div>
+
+        <div class="student-side">
+            <div class="student-stat">
+                <strong>{{ perguntas|length }}</strong>
+                <span class="muted">pergunta(s) neste quiz</span>
+            </div>
+            <div class="student-stat">
+                <strong>1 envio</strong>
+                <span class="muted">responda tudo e envie ao final</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card student-form-card">
+        {% if erro %}
+        <div class="error">{{ erro }}</div>
+        {% endif %}
+
+        <form method="POST" class="grid">
+            <div class="field">
+                <label>Seu nome</label>
+                <input type="text" name="nome" placeholder="Ex: João" required>
+            </div>
+
+            {% for pergunta in perguntas %}
+            <div class="question-card student-question">
+                <span class="question-number">Questão {{ loop.index }}</span>
+                <strong>{{ pergunta.texto }}</strong>
+                <div class="answers-grid">
+                    {% for alternativa in pergunta.alternativas %}
+                    <label class="answer-option">
+                        <input
+                            type="radio"
+                            name="pergunta_{{ pergunta.id }}"
+                            value="{{ alternativa.id }}"
+                            {% if loop.first %}required{% endif %}
+                        >
+                        <span>{{ alternativa.texto }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="actions compact-actions">
+                <button class="btn" type="submit">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span class="btn-label">Enviar respostas</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

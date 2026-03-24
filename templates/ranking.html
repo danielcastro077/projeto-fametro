@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Ranking{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Ranking - {{ quiz.titulo }}</h2>
+    <p class="muted">Classificação por pontuação e ordem de envio.</p>
+
+    {% if ranking %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ranking %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.participante_nome }}</td>
+                    <td>{{ item.pontuacao }}/{{ item.total_perguntas }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">Ainda não há participantes neste quiz.</p>
+    {% endif %}
+
+    <div class="actions compact-actions" style="margin-top: 14px;">
+        <a class="btn btn-outline" href="{{ url_for('responder_quiz', slug=quiz.slug) }}">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span class="btn-label">Responder quiz</span>
+        </a>
+        {% if session.get('usuario_id') %}
+        <a class="btn" href="{{ url_for('home') }}">
+            <i class="fa-solid fa-house"></i>
+            <span class="btn-label">Voltar ao painel</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

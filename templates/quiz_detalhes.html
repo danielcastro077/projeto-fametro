@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Detalhes do Quiz{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>{{ quiz.titulo }}</h2>
+    <p class="muted">Compartilhe o link com os alunos e acompanhe o ranking em tempo real.</p>
+
+    <div class="success">Quiz pronto para uso.</div>
+
+    <div class="grid">
+        <div class="field">
+            <label>Link público do quiz</label>
+            <input id="linkQuiz" type="text" value="{{ link_publico }}" readonly>
+        </div>
+        <div class="actions compact-actions">
+            <button class="btn" id="copiar-link" type="button">
+                <i class="fa-solid fa-copy"></i>
+                <span class="btn-label">Copiar link</span>
+            </button>
+            <a class="btn btn-outline" href="{{ url_for('responder_quiz', slug=quiz.slug) }}" target="_blank">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span class="btn-label">Abrir quiz</span>
+            </a>
+            <a class="btn btn-outline" href="{{ url_for('ranking_quiz', slug=quiz.slug) }}" target="_blank">
+                <i class="fa-solid fa-trophy"></i>
+                <span class="btn-label">Ranking completo</span>
+            </a>
+            <a class="btn btn-outline" href="{{ url_for('editar_quiz', slug=quiz.slug) }}">
+                <i class="fa-solid fa-pen"></i>
+                <span class="btn-label">Editar</span>
+            </a>
+            <form class="inline-form" method="POST" action="{{ url_for('deletar_quiz', slug=quiz.slug) }}" onsubmit="return confirm('Excluir este quiz e todas as respostas?');">
+                <button class="btn btn-danger" type="submit">
+                    <i class="fa-solid fa-trash"></i>
+                    <span class="btn-label">Deletar</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Top 10 ranking atual</h3>
+    {% if ranking %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ranking %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.participante_nome }}</td>
+                    <td>{{ item.pontuacao }}/{{ item.total_perguntas }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">Ainda não há respostas para este quiz.</p>
+    {% endif %}
+</div>
+
+<script>
+    const botao = document.getElementById("copiar-link");
+    const input = document.getElementById("linkQuiz");
+
+    botao.addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(input.value);
+            botao.innerHTML = '<i class="fa-solid fa-check"></i><span class="btn-label">Link copiado</span>';
+            setTimeout(() => {
+                botao.innerHTML = '<i class="fa-solid fa-copy"></i><span class="btn-label">Copiar link</span>';
+            }, 1500);
+        } catch (error) {
+            input.select();
+            document.execCommand("copy");
+        }
+    });
+</script>
+{% endblock %}

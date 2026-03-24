@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Resultado{% endblock %}
+{% block content %}
+{% set percentual = (tentativa.pontuacao * 100 / tentativa.total_perguntas) if tentativa.total_perguntas else 0 %}
+<div class="result-shell">
+<div class="card">
+    <span class="result-highlight">
+        <i class="fa-solid fa-chart-simple"></i>
+        Resultado final
+    </span>
+    <h2>Resultado - {{ quiz.titulo }}</h2>
+    <p><strong>{{ tentativa.participante_nome }}</strong>, você acertou <strong>{{ tentativa.pontuacao }}/{{ tentativa.total_perguntas }}</strong> questões.</p>
+    <p class="muted">Aproveitamento: {{ percentual|round(0)|int }}% {% if posicao %}| Posição no ranking: #{{ posicao }}{% endif %}</p>
+
+    <div class="actions compact-actions">
+        <a class="btn" href="{{ url_for('responder_quiz', slug=quiz.slug) }}">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span class="btn-label">Responder novamente</span>
+        </a>
+        <a class="btn btn-outline" href="{{ url_for('ranking_quiz', slug=quiz.slug) }}">
+            <i class="fa-solid fa-trophy"></i>
+            <span class="btn-label">Ver ranking completo</span>
+        </a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 14px;">
+    <h3>Top 20</h3>
+    {% if ranking %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ranking %}
+                <tr class="{% if item.id == tentativa.id %}highlight{% endif %}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.participante_nome }}</td>
+                    <td>{{ item.pontuacao }}/{{ item.total_perguntas }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">Sem tentativas ainda.</p>
+    {% endif %}
+</div>
+</div>
+{% endblock %}
