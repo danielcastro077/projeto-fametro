@@ -4,13 +4,12 @@ import secrets
 from functools import wraps
 
 from flask import Flask, abort, redirect, render_template, request, session, url_for
-
 from model import Alternativa, Pergunta, Quiz, Tentativa, Usuario, db
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = "segredo_super_simples"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///banco.db"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "segredo_super_simples")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///banco.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
@@ -145,6 +144,13 @@ def serializar_quiz_para_form(quiz):
 
 
 @app.route("/")
+def index():
+    if "usuario_id" in session:
+        return redirect(url_for("home"))
+    return redirect(url_for("login"))
+
+
+@app.route("/home")
 @login_obrigatorio
 def home():
     quizzes = (
@@ -393,6 +399,7 @@ def ranking_quiz(slug):
     )
     return render_template("ranking.html", quiz=quiz, ranking=ranking)
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port, debug=False)
